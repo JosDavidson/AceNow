@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AceNow | Exam Revision</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <!-- JSZip for bundled downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- Login View (Landing Page) -->
+    <div id="login-view" class="login-container">
+        <div class="login-content">
+            <h1 class="brand-title">AceNow</h1>
+            <p class="brand-subtitle">
+                A focused platform for last-minute exam preparation, offering AI-powered summaries, key topics, and
+                quick quizzes for efficient revision.
+            </p>
+
+            <div class="login-action">
+                <button class="btn-login-hero" onclick="handleAuthClick()">
+                    <img src="/static/images/google_Logo.svg" alt="Google Logo" class="btn-icon-img">
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+
+        <!-- About the Platform Section -->
+        <div class="about-section">
+            <h2 class="about-title">About the Platform</h2>
+            <p class="about-description">
+                This platform is designed specifically for last-minute exam preparation, helping students revise
+                smarter when time is
+                limited. It provides concise summaries, key topics, and focused quizzes powered by AI to maximize
+                clarity and retention
+                just before an exam.
+            </p>
+            <p class="about-description">
+                Built with a strong emphasis on speed, precision, and exam relevance, the platform enables learners
+                to quickly identify
+                important concepts, reinforce understanding, and assess readiness efficiently.
+            </p>
+
+            <!-- Feature Cards -->
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <img src="/static/images/Google-Antigravity-LogoPNG.png" alt="Google Antigravity"
+                            class="feature-logo">
+                        <h3>Google Antigravity</h3>
+                    </div>
+                    <p class="feature-description">
+                        This platform has been created with the support and technical assistance of Antigravity,
+                        combining innovation,
+                        AI-driven learning, and student-centric design to make last-minute preparation more
+                        effective and stress-free.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <img src="/static/images/FigmaLogo.png" alt="Figma" class="feature-logo">
+                        <h3>Figma</h3>
+                    </div>
+                    <p class="feature-description">
+                        The user interface of this platform was thoughtfully designed in Figma, with a strong focus
+                        on clarity, accessibility,
+                        and ease of use for last-minute exam preparation.
+                    </p>
+                    <a href="https://www.figma.com/design/Mw2wCyHNVXlTVAGpy00l6A/AceNow?node-id=0-1&t=Zg1DX6N5UyOvczVB-1"
+                        target="_blank" class="feature-link">View Design File →</a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="login-footer">
+            <div class="social-links">
+                <a href="mailto:josedavidson.work@gmail.com" class="social-icon" title="Email">
+                    <img src="/static/images/mail-svgrepo-com.svg" alt="Email">
+                </a>
+                <a href="https://github.com/JosDavidson" target="_blank" class="social-icon" title="GitHub">
+                    <img src="/static/images/github-142-svgrepo-com.svg" alt="GitHub">
+                </a>
+                <a href="https://www.linkedin.com/in/jose-davidson/" target="_blank" class="social-icon"
+                    title="LinkedIn">
+                    <img src="/static/images/linkedin-round-svgrepo-com.svg" alt="LinkedIn">
+                </a>
+            </div>
+            <p>© 2026 Jose Davidson. All rights reserved.</p>
+        </footer>
+    </div>
+
+
+    <!-- Dashboard View (Hidden by default) -->
+    <div id="dashboard-view" style="display: none;">
+        <nav>
+            <div class="logo">
+                <span class="logo-highlight">AceNow</span>
+            </div>
+            <div class="nav-center">
+                <button class="btn-glass" onclick="openSettings()">Select AI-Model</button>
+            </div>
+            <div class="nav-actions" id="auth-container">
+                <button class="btn-assistant" onclick="toggleAssistantView()">Assistant</button>
+                <button class="btn-logout" onclick="handleSignoutClick()">Logout</button>
+            </div>
+        </nav>
+
+        <div class="container" id="courses-view">
+            <!-- Settings Modal -->
+            <dialog id="settings-modal" class="settings-modal">
+                <div class="settings-container">
+                    <div id="model-options-list" class="model-options-list">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="settings-actions">
+                        <button class="btn-save-settings" onclick="saveSettings()">Save</button>
+                    </div>
+                </div>
+            </dialog>
+
+            <!-- Loading State -->
+            <div class="loading" id="initial-loading" style="display: none;">
+                <p>Loading your courses...</p>
+            </div>
+
+            <!-- Courses Grid -->
+            <div class="grid" id="courses-grid">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+
+        <!-- Assistant View -->
+        <div class="container assistant-container" id="assistant-view" style="display: none;">
+            <div class="discussion-pills" id="assistant-topics">
+                <!-- Example topics mentioned in prompt images -->
+                <div class="discussion-pill">Deep Learning Basics</div>
+                <div class="discussion-pill">Flask Best Practices</div>
+                <div class="discussion-pill">Kubernetes Orchestration</div>
+                <div class="discussion-pill">Database Indexing</div>
+            </div>
+
+            <h2 class="assistant-prompt">Select a topic to continue or start a new discussion</h2>
+
+            <div class="chat-input-wrapper">
+                <div class="chat-input-container">
+                    <textarea id="chat-input" placeholder="Ask Anything" rows="1"></textarea>
+                    <button class="btn-send-chat" onclick="sendAssistantQuery()">➔</button>
+                </div>
+            </div>
+
+            <!-- Chat Response Area -->
+            <div id="assistant-response-container" class="assistant-response-area" style="display: none;">
+                <div class="response-card">
+                    <div id="assistant-response-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz/Study Overlay -->
+        <div class="quiz-overlay" id="quiz-modal">
+            <div class="quiz-container">
+                <button class="close-btn" onclick="closeQuiz()">×</button>
+
+                <!-- View 1: Loading/Processing -->
+                <div id="view-loading" class="quiz-view">
+                    <h2>Analyzing Materials...</h2>
+                    <div class="spinner"></div>
+                    <p id="loading-text">Fetching course documents</p>
+                </div>
+
+                <!-- View 1.5: Action Menu -->
+                <div id="view-action-menu" class="quiz-view" style="display:none;">
+                    <div class="menu-header">
+                        <div class="menu-titles">
+                            <h2 id="menu-course-name">Course Name</h2>
+                            <p id="menu-course-batch" class="menu-subtitle">Batch</p>
+                        </div>
+                    </div>
+
+                    <div class="action-grid">
+                        <div class="action-card" onclick="startTopicsGeneration()">
+                            <div class="action-img-container">
+                                <img src="/static/images/SelectionPanelKeyPoints.png" alt="Key Topics">
+                            </div>
+                            <h3>Key Topics</h3>
+                            <p>High-priority concepts frequently asked in exams are curated here.</p>
+                            <span class="action-link">View core concepts</span>
+                        </div>
+                        <div class="action-card" onclick="showQuizConfig()">
+                            <div class="action-img-container">
+                                <img src="/static/images/SelectionPanelQuiz.png" alt="Quiz">
+                            </div>
+                            <h3>QUIZ</h3>
+                            <p>Quick assessments designed to reinforce important concepts.</p>
+                            <span class="action-link">Attempt Quick Quiz</span>
+                        </div>
+                        <div class="action-card" onclick="startSummaryGeneration()">
+                            <div class="action-img-container">
+                                <img src="/static/images/SelectionPanelSummary.png" alt="Summary">
+                            </div>
+                            <h3>Summary</h3>
+                            <p>A quick overview of core ideas to strengthen last-minute understanding.</p>
+                            <span class="action-link">Get Instant Summary</span>
+                        </div>
+                        <div class="action-card" onclick="downloadAllMaterials()">
+                            <div class="action-img-container"
+                                style="display: flex; align-items: center; justify-content: center; background: rgba(14, 165, 233, 0.1); border-radius: 20px;">
+                                <div style="font-size: 4rem; padding: 1rem;">📄</div>
+                            </div>
+                            <h3>Materials</h3>
+                            <p>Download all original study materials (PDF/PPTX) directly from Classroom.</p>
+                            <span class="action-link">Download all materials</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 1.6: Quiz Configuration (New Design) -->
+                <div id="view-quiz-config" class="quiz-view" style="display:none;">
+                    <div class="quiz-header-banner">
+                        <img src="/static/images/QuizBanner.png" alt="Banner" class="banner-img">
+                        <div class="banner-overlay">
+                            <div class="banner-content">
+                                <div class="banner-text">
+                                    <h2 id="config-course-name">Course Name</h2>
+                                    <p id="config-course-batch" class="banner-subtitle">Batch</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-container">
+                        <h3 class="config-main-title">Configure Quiz</h3>
+
+                        <div class="config-row">
+                            <label>Number of Questions</label>
+                            <div class="pill-group" id="pill-num-questions">
+                                <div class="pill-option selected" data-value="10">10 Questions</div>
+                                <div class="pill-option" data-value="15">15 Questions</div>
+                                <div class="pill-option" data-value="25">25 Questions</div>
+                            </div>
+                        </div>
+
+                        <div class="config-row">
+                            <label>Difficulty</label>
+                            <div class="pill-group" id="pill-difficulty">
+                                <div class="pill-option selected" data-value="Easy">Easy</div>
+                                <div class="pill-option" data-value="Medium">Medium</div>
+                                <div class="pill-option" data-value="Hard">Hard</div>
+                            </div>
+                        </div>
+
+                        <div class="config-row">
+                            <label>Timer</label>
+                            <div class="pill-group" id="pill-timer">
+                                <div class="pill-option" data-value="enable">Enable</div>
+                                <div class="pill-option selected" data-value="disable">Disable</div>
+                                <div class="pill-option" data-value="custom">Custom</div>
+                            </div>
+                        </div>
+
+                        <div class="config-actions">
+                            <button class="btn-primary" onclick="startQuizFromConfig()">Start Quiz</button>
+                            <button class="btn-secondary" onclick="switchView('action-menu')">Back</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 2: Topic Overview / Key Points -->
+                <div id="view-topics" class="quiz-view" style="display:none;">
+                    <div class="topics-header-banner">
+                        <img src="/static/images/KeyPointsBanner.png" alt="Banner" class="banner-img">
+                        <div class="banner-overlay">
+                            <div class="banner-content">
+                                <div class="banner-text">
+                                    <h2 id="topics-course-name">Course Name</h2>
+                                    <p id="topics-course-batch" class="banner-subtitle">Batch</p>
+                                    <h3 class="banner-label">Key Topics</h3>
+                                </div>
+                                <div id="selected-topic-pill-container" style="display: none;">
+                                    <div class="topic-pill-large" id="selected-topic-name">Topic Name</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="topics-grid-container" class="topics-container-padding">
+                        <div class="topics-pills-grid" id="topics-pills-grid">
+                            <!-- Pills will be injected here -->
+                        </div>
+                    </div>
+
+                    <div id="topic-explanation-container" class="topics-container-padding" style="display: none;">
+                        <div class="explanation-content" id="topic-explanation-text">
+                            <!-- AI Explanation will be injected here -->
+                        </div>
+                    </div>
+
+                    <div class="topics-footer">
+                        <button class="btn-secondary" id="btn-topics-back" onclick="switchView('action-menu')">Back to
+                            Menu</button>
+                        <button class="btn-secondary" id="btn-explanation-back" style="display: none;"
+                            onclick="showTopicsGrid()">Back to Topics</button>
+                    </div>
+                </div>
+
+                <!-- View 2.5: Summary View -->
+                <div id="view-summary" class="quiz-view" style="display:none;">
+                    <div class="summary-header-banner">
+                        <img src="/static/images/SummaryBanner.png" alt="Banner" class="banner-img">
+                        <!-- <button class="close-btn" onclick="switchView('action-menu')">×</button> -->
+                        <div class="banner-overlay">
+                            <div class="banner-content">
+                                <div class="banner-text">
+                                    <h2 id="summary-course-name">Course Name</h2>
+                                    <p id="summary-course-batch" class="banner-subtitle">Batch</p>
+                                    <h3 class="banner-label">Summary</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-container-padding">
+                        <div id="summary-content" class="explanation-content">
+                            <!-- AI Content will be injected here -->
+                        </div>
+                    </div>
+
+                    <div class="topics-footer">
+                        <button class="btn-secondary" onclick="switchView('action-menu')">Back to Menu</button>
+                    </div>
+                </div>
+
+                <!-- View 3: Quiz Active (New Design) -->
+                <div id="view-quiz" class="quiz-view" style="display:none;">
+                    <div class="quiz-header-banner">
+                        <img src="/static/images/QuizBanner.png" alt="Banner" class="banner-img">
+                        <div class="banner-overlay">
+                            <div class="banner-content">
+                                <div class="banner-text">
+                                    <h2 id="active-course-name">Course Name</h2>
+                                    <p id="active-course-batch" class="banner-subtitle">Batch</p>
+                                    <h3 class="banner-label">Quiz</h3>
+                                </div>
+                                <div class="quiz-stats-overlay">
+                                    <div id="quiz-timer-display">Time: 00:00</div>
+                                    <div id="quiz-qno-display">Q.No. 1/10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-active-container">
+                        <h3 id="question-text" class="question-text">1. Question goes here...</h3>
+
+                        <div class="options-grid" id="options-container">
+                            <!-- Options injected here as 2x2 pills -->
+                        </div>
+
+                        <div id="rationale-container" class="rationale-container" style="display: none;">
+                            <h4 id="answer-status-label">Correct!</h4>
+                            <p id="rationale-text"></p>
+                        </div>
+
+                        <div id="hint-container" class="hint-container" style="display: none;">
+                            <button class="btn-hint" onclick="toggleHint()">💡 Show Hint</button>
+                            <p id="hint-text" class="hint-text" style="display: none;"></p>
+                        </div>
+
+                        <button id="next-question-btn" class="btn-primary"
+                            style="display: none; width: 100%; margin-top: 1.5rem;" onclick="nextQuestion()">Next
+                            Question</button>
+                    </div>
+                </div>
+
+                <!-- View 4: Results (Modified) -->
+                <div id="view-results" class="quiz-view" style="display:none;">
+                    <h2>Quiz Complete!</h2>
+                    <div class="score-circle" id="final-score-display">80%</div>
+                    <div class="result-breakdown">
+                        <span class="result-item correct">✅ Correct: <span id="correct-count">0</span></span>
+                        <span class="result-item wrong">❌ Wrong: <span id="wrong-count">0</span></span>
+                    </div>
+                    <p id="feedback-text">Great job! You mastered this topic.</p>
+                    <button class="btn-primary" onclick="closeQuiz()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

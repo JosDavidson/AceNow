@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - FILE_PARSER_SERVICE_URL=http://file-parser-service:5002
+      - AI_SERVICE_URL=http://ai-service:5003
+      - FRONTEND_SERVICE_URL=http://frontend-service:5004
+    depends_on:
+      - auth-service
+      - file-parser-service
+      - ai-service
+      - frontend-service
+
+  auth-service:
+    build: ./services/auth-service
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+
+  file-parser-service:
+    build: ./services/file-parser-service
+    ports:
+      - "5002:5002"
+    environment:
+      - PORT=5002
+
+  ai-service:
+    build: ./services/ai-service
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_API_KEY=${HF_API_KEY}
+
+  frontend-service:
+    build: ./services/frontend-service
+    ports:
+      - "5004:5004"
+    environment:
+      - PORT=5004

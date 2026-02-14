@@ -1,0 +1,37 @@
+# Environment
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Service Specific
+services/*/uploads/*
+services/*/audio/*
+!services/*/uploads/.gitkeep
+!services/*/audio/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project Reference
+AceNowUI/
+Asserts/
