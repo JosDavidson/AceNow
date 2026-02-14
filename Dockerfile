@@ -26,8 +26,8 @@ USER root
 RUN chmod +x start.sh
 USER user
 
-# Default Port for many free hosting services
-EXPOSE 5000
+# Default Port for Hugging Face Spaces
+EXPOSE 7860
 
 # Start script
 CMD ["./start.sh"]
