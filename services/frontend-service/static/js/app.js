@@ -276,7 +276,7 @@ async function listCourses() {
         courses.forEach((course, index) => {
             const card = document.createElement('div');
             card.className = 'card';
-            const cardImg = `/static/images/Card${(index % 4) + 1}.png`;
+            const cardImg = `https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/Card${(index % 4) + 1}.png`;
 
             card.innerHTML = `
                 <div class="card-image-container">
