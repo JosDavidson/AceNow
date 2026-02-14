@@ -10,18 +10,14 @@ RUN apt-get update && apt-get install -y \
 # Copy all services
 COPY . .
 
-# Install dependencies from all requirements.txt files
-RUN pip install -r services/auth-service/requirements.txt
-RUN pip install -r services/file-parser-service/requirements.txt
-RUN pip install -r services/ai-service/requirements.txt
-RUN pip install -r services/frontend-service/requirements.txt
-RUN pip install -r services/api-gateway/requirements.txt
+# Install dependencies from root requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Create non-root user (good practice for HF Spaces)
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
-	PATH=/home/user/.local/bin:$PATH
+    PATH=/home/user/.local/bin:$PATH
 
 WORKDIR /app
 
