@@ -17,23 +17,25 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # 1. Create a temporary deployment directory
+          mkdir deploy_dir
+          
+          # 2. Copy all files EXCEPT the .git folder and images
+          rsync -av --progress . ./deploy_dir --exclude .git --exclude services/frontend-service/static/images/*.png --exclude services/frontend-service/static/images/*.svg --exclude .gitattributes
+          
+          # 3. Initialize a FRESH git repo in the deploy dir (No History!)
+          cd deploy_dir
+          git init
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
           
-          # 1. Remove LFS tracking to prevent binary detection
-          rm -f .gitattributes
-          
-          # 2. Aggressively remove all possible images from the index and disk
-          git rm -r --cached "services/frontend-service/static/images" || echo "Already removed"
-          rm -rf services/frontend-service/static/images
-          
-          # 3. Create a dummy empty folder so the path doesn't break the app structure
+          # 4. Add a dummy file to keep the images folder structure
           mkdir -p services/frontend-service/static/images
           touch services/frontend-service/static/images/.gitkeep
           
-          # 4. Commit this 100% clean version
-          git add -A
-          git commit -m "Deploy 100% text-only version to HF" || echo "No changes"
+          # 5. Commit everything as a single new "Clean" commit
+          git add .
+          git commit -m "Clean deployment - 0 binaries"
           
-          # 5. Final Force Push
+          # 6. Force push this orphan commit to HF
           git push --force https://x-token:$HF_TOKEN@huggingface.co/spaces/Josedavison/AceNow main
