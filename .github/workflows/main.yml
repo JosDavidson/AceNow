@@ -20,22 +20,28 @@ jobs:
           # 1. Create a temporary deployment directory
           mkdir deploy_dir
           
-          # 2. Copy all files EXCEPT the .git folder and images
-          rsync -av --progress . ./deploy_dir --exclude .git --exclude services/frontend-service/static/images/*.png --exclude services/frontend-service/static/images/*.svg --exclude .gitattributes
+          # 2. Copy core files to the deployment directory
+          cp -r . deploy_dir/ || echo "Copy failed"
           
-          # 3. Initialize a FRESH git repo in the deploy dir (No History!)
+          # 3. Enter the deploy dir and clean it up (Delete everything that triggers HF)
           cd deploy_dir
+          rm -rf .git
+          rm -rf services/frontend-service/static/images/*.png
+          rm -rf services/frontend-service/static/images/*.svg
+          rm -f .gitattributes
+          
+          # 4. Initialize a FRESH git repo (No History!)
           git init
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
           
-          # 4. Add a dummy file to keep the images folder structure
+          # 5. Create a dummy file to keep the images folder structure
           mkdir -p services/frontend-service/static/images
           touch services/frontend-service/static/images/.gitkeep
           
-          # 5. Commit everything as a single new "Clean" commit
+          # 6. Commit everything as a single new "Clean" commit
           git add .
           git commit -m "Clean deployment - 0 binaries"
           
-          # 6. Force push this orphan commit to HF
+          # 7. Force push this orphan commit to HF
           git push --force https://x-token:$HF_TOKEN@huggingface.co/spaces/Josedavison/AceNow main
