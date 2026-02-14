@@ -1,3 +1,13 @@
+---
+title: AceNow
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+license: mit
+---
+
 # AceNow - AI-Powered Exam Prep Microservices
 
 AceNow is a focused platform for last-minute exam preparation, offering AI-powered summaries, key topics, and quick quizzes for efficient revision. Built with a modern microservices architecture, it integrates seamlessly with Google Classroom to retrieve study materials and uses state-of-the-art AI models for content analysis.
