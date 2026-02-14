@@ -17,17 +17,23 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # 1. Clear git config to be safe
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
           
-          # 2. Remove binary files to bypass HF Xet restriction
-          rm -rf services/frontend-service/static/images/*.png
-          rm -rf services/frontend-service/static/images/*.svg
+          # 1. Remove LFS tracking to prevent binary detection
+          rm -f .gitattributes
           
-          # 3. Commit this "lightweight" version (only locally)
-          git add .
-          git commit -m "Strip binary files for HF deployment" || echo "No changes to commit"
+          # 2. Aggressively remove all possible images from the index and disk
+          git rm -r --cached "services/frontend-service/static/images" || echo "Already removed"
+          rm -rf services/frontend-service/static/images
           
-          # 4. Force push this version to HF
+          # 3. Create a dummy empty folder so the path doesn't break the app structure
+          mkdir -p services/frontend-service/static/images
+          touch services/frontend-service/static/images/.gitkeep
+          
+          # 4. Commit this 100% clean version
+          git add -A
+          git commit -m "Deploy 100% text-only version to HF" || echo "No changes"
+          
+          # 5. Final Force Push
           git push --force https://x-token:$HF_TOKEN@huggingface.co/spaces/Josedavison/AceNow main
