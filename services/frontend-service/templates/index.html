@@ -11,6 +11,7 @@
     <script src="https://apis.google.com/js/api.js" async defer></script>
     <!-- JSZip for bundled downloads -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="/static/js/image_bundle.js"></script>
 </head>
 
 <body>
@@ -28,8 +29,7 @@
 
             <div class="login-action">
                 <button class="btn-login-hero" onclick="handleAuthClick()">
-                    <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/google_Logo.svg"
-                        alt="Google Logo" class="btn-icon-img">
+                    <img data-src="google_Logo.svg" alt="Google Logo" class="btn-icon-img">
                     Continue with Google
                 </button>
             </div>
@@ -55,8 +55,7 @@
             <div class="feature-cards">
                 <div class="feature-card">
                     <div class="feature-header">
-                        <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/Google-Antigravity-LogoPNG.png"
-                            alt="Google Antigravity" class="feature-logo">
+                        <img data-src="Google-Antigravity-LogoPNG.png" alt="Google Antigravity" class="feature-logo">
                         <h3>Google Antigravity</h3>
                     </div>
                     <p class="feature-description">
@@ -69,8 +68,7 @@
 
                 <div class="feature-card">
                     <div class="feature-header">
-                        <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/FigmaLogo.png"
-                            alt="Figma" class="feature-logo">
+                        <img data-src="FigmaLogo.png" alt="Figma" class="feature-logo">
                         <h3>Figma</h3>
                     </div>
                     <p class="feature-description">
@@ -87,17 +85,14 @@
         <footer class="login-footer">
             <div class="social-links">
                 <a href="mailto:josedavidson.work@gmail.com" class="social-icon" title="Email">
-                    <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/mail-svgrepo-com.svg"
-                        alt="Email">
+                    <img data-src="mail-svgrepo-com.svg" alt="Email">
                 </a>
                 <a href="https://github.com/JosDavidson" target="_blank" class="social-icon" title="GitHub">
-                    <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/github-142-svgrepo-com.svg"
-                        alt="GitHub">
+                    <img data-src="github-142-svgrepo-com.svg" alt="GitHub">
                 </a>
                 <a href="https://www.linkedin.com/in/jose-davidson/" target="_blank" class="social-icon"
                     title="LinkedIn">
-                    <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/linkedin-round-svgrepo-com.svg"
-                        alt="LinkedIn">
+                    <img data-src="linkedin-round-svgrepo-com.svg" alt="LinkedIn">
                 </a>
             </div>
             <p>© 2026 Jose Davidson. All rights reserved.</p>
@@ -196,8 +191,7 @@
                     <div class="action-grid">
                         <div class="action-card" onclick="startTopicsGeneration()">
                             <div class="action-img-container">
-                                <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/SelectionPanelKeyPoints.png"
-                                    alt="Key Topics">
+                                <img data-src="SelectionPanelKeyPoints.png" alt="Key Topics">
                             </div>
                             <h3>Key Topics</h3>
                             <p>High-priority concepts frequently asked in exams are curated here.</p>
@@ -205,8 +199,7 @@
                         </div>
                         <div class="action-card" onclick="showQuizConfig()">
                             <div class="action-img-container">
-                                <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/SelectionPanelQuiz.png"
-                                    alt="Quiz">
+                                <img data-src="SelectionPanelQuiz.png" alt="Quiz">
                             </div>
                             <h3>QUIZ</h3>
                             <p>Quick assessments designed to reinforce important concepts.</p>
@@ -214,8 +207,7 @@
                         </div>
                         <div class="action-card" onclick="startSummaryGeneration()">
                             <div class="action-img-container">
-                                <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/SelectionPanelSummary.png"
-                                    alt="Summary">
+                                <img data-src="SelectionPanelSummary.png" alt="Summary">
                             </div>
                             <h3>Summary</h3>
                             <p>A quick overview of core ideas to strengthen last-minute understanding.</p>
@@ -288,8 +280,7 @@
                 <!-- View 2: Topic Overview / Key Points -->
                 <div id="view-topics" class="quiz-view" style="display:none;">
                     <div class="topics-header-banner">
-                        <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/KeyPointsBanner.png"
-                            alt="Banner" class="banner-img">
+                        <img data-src="KeyPointsBanner.png" alt="Banner" class="banner-img">
                         <div class="banner-overlay">
                             <div class="banner-content">
                                 <div class="banner-text">
@@ -327,8 +318,7 @@
                 <!-- View 2.5: Summary View -->
                 <div id="view-summary" class="quiz-view" style="display:none;">
                     <div class="summary-header-banner">
-                        <img src="https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/SummaryBanner.png"
-                            alt="Banner" class="banner-img">
+                        <img data-src="SummaryBanner.png" alt="Banner" class="banner-img">
                         <!-- <button class="close-btn" onclick="switchView('action-menu')">×</button> -->
                         <div class="banner-overlay">
                             <div class="banner-content">

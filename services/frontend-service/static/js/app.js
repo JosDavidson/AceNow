@@ -144,6 +144,16 @@ function initTheme() {
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     fetchConfig();
+
+    // Load images from bundle
+    if (typeof IMAGE_BUNDLE !== 'undefined') {
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            const name = img.dataset.src;
+            if (IMAGE_BUNDLE[name]) {
+                img.src = IMAGE_BUNDLE[name];
+            }
+        });
+    }
 });
 
 async function fetchConfig() {
@@ -276,7 +286,8 @@ async function listCourses() {
         courses.forEach((course, index) => {
             const card = document.createElement('div');
             card.className = 'card';
-            const cardImg = `https://raw.githubusercontent.com/JosDavidson/AceNow/main/services/frontend-service/static/images/Card${(index % 4) + 1}.png`;
+            const imgName = `Card${(index % 4) + 1}.png`;
+            const cardImg = (typeof IMAGE_BUNDLE !== 'undefined' && IMAGE_BUNDLE[imgName]) ? IMAGE_BUNDLE[imgName] : '';
 
             card.innerHTML = `
                 <div class="card-image-container">
