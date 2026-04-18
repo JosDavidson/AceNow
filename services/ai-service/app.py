@@ -215,7 +215,8 @@ Follow these strict pedagogical rules:
 2. RATIONALE-DRIVEN: For every answer option, provide a one-sentence rationale explaining WHY it is correct or WHY it is a common misconception.
 3. ADAPTIVE DIFFICULTY: Group questions into 'Conceptual', 'Hands-on/Syntax', and 'Architectural/Problem Solving'.
 4. STRICT JSON: Ensure all double quotes within text fields are escaped with a backslash. Use only valid JSON characters.
-5. FORMAT: Return only a valid JSON object with the following structure:
+5. EQUAL OPTION LENGTH: Ensure ALL answer options (both correct and incorrect) are approximately the same length and detail. Do NOT make the correct answer noticeably longer.
+6. FORMAT: Return only a valid JSON object with the following structure:
 
 {{
   "title": "Quiz Title",
@@ -366,12 +367,16 @@ def explain_topic():
         if not text_content or not topic_name:
             return jsonify({"success": False, "error": "Missing context or topic name"}), 400
 
-        prompt = f"""Explain the topic '{topic_name}' in detail based on its context within the provided text.
-Explain it like you are a helpful teacher. Use simple analogies if possible.
-Keep the explanation focused, professional, and limited to 2-3 detailed paragraphs.
+        prompt = f"""Act as an Expert Academic Tutor for a high-level university course. Your objective is to respond to the student's latest query accurately.
+If the student asks a conversational question or follow-up, answer it directly using the previous chat history provided.
+If they ask about a specific concept, explain it in detail based on the course context.
+Explain it as if you are directly chatting with a student. Use simple analogies and engaging language.
+Keep the explanation focused, professional, and structured beautifully in 2-3 detailed paragraphs unless the user explicitly asks for 'short' or 'brief'.
 
-Context Text:
-{text_content[:10000]}
+Student's Request / Latest Topic: '{topic_name}'
+
+History and Context Text:
+{text_content}
 """
 
         # Query AI provider with fallback

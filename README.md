@@ -8,21 +8,28 @@ pinned: false
 license: mit
 ---
 
-# AceNow - AI-Powered Exam Prep Microservices
+# AceNow v2.0 - AI-Powered Exam Prep Microservices
 
-AceNow is a focused platform for last-minute exam preparation, offering AI-powered summaries, key topics, and quick quizzes for efficient revision. Built with a modern microservices architecture, it integrates seamlessly with Google Classroom to retrieve study materials and uses state-of-the-art AI models for content analysis.
+AceNow is a focused platform for last-minute exam preparation, offering AI-powered summaries, key topics, and quick quizzes for efficient revision. Version 2.0 introduces a modernized UI, context-aware AI assistance, and flexible study material handling.
+
+## ✨ New in Version 2.0
+
+- **Context-Aware AI Assistant**: A dedicated academic chat interface that understands your course context and provides deep-dives into complex topics.
+- **Manual File Upload**: Supplement Google Classroom materials with your own local PDF and PPTX files.
+- **Adaptive Study Logic**: Quizzes now track your performance to focus on areas where you need more practice.
+- **Pill-Shaped Floating UI**: A sleek, modern navigation system for faster access to tools.
+- **Model Selector**: Switch between Gemini, Groq (Llama 3.3), and local Ollama models on the fly.
 
 ## ✨ Core Features
 
 - **Google Classroom Integration**: Securely fetch documents (PDF/PPTX) and announcements from your enrolled courses.
-- **Smart Study Logic**:
+- **Smart Revision Logic**:
   - **Key Topics**: Automatically identifies high-priority exam concepts.
   - **AI Summaries**: Concise oversight of core ideas for fast reading.
   - **Pedagogical Quizzes**: Scenario-based MCQs with hints and detailed rationales for every answer.
 - **Robust AI Fallback**: Multi-provider engine (Gemini 2.0 -> Groq Llama 3 -> Ollama) ensures 100% uptime even during rate limits.
 - **Parallel Downloads**: Bundle all course materials into a single ZIP file instantly using JSZip.
 - **Modern Responsive UI**: Premium glassmorphic interface with Dark/Light modes and full mobile compatibility.
-- **AI Assistant**: Dedicated academic chat interface for deep-diving into complex topics.
 
 ## 🏗️ Architecture
 

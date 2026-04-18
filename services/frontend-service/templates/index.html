@@ -102,18 +102,17 @@
 
     <!-- Dashboard View (Hidden by default) -->
     <div id="dashboard-view" style="display: none;">
-        <nav>
-            <div class="logo">
-                <span class="logo-highlight">AceNow</span>
+        <nav class="floating-nav">
+            <div class="logo" style="margin-right: 1.5rem;">
+                <span class="logo-highlight" style="cursor: pointer;" onclick="window.scrollTo(0,0)">AceNow</span>
             </div>
-            <div class="nav-center">
-                <button class="btn-glass" onclick="openSettings()">Select AI-Model</button>
-            </div>
-            <div class="nav-actions" id="auth-container">
-                <button class="btn-assistant" onclick="toggleAssistantView()">Assistant</button>
-                <button class="btn-logout" onclick="handleSignoutClick()">Logout</button>
-            </div>
+            <button class="nav-pill-btn" onclick="openSettings()">AI Models</button>
+            <button class="nav-pill-btn" onclick="document.getElementById('manual-upload-input').click()">Upload</button>
+            <button id="assistant-toggle-btn" class="nav-pill-btn" onclick="toggleAssistantView()">Assistant</button>
+            <button class="nav-pill-btn" onclick="handleSignoutClick()">Logout</button>
+            <button id="theme-toggle-btn" class="nav-pill-icon" onclick="toggleTheme()">🌙</button>
         </nav>
+        <input type="file" id="manual-upload-input" multiple accept=".pdf,.pptx" style="display: none;" onchange="handleManualUpload(event)">
 
         <div class="container" id="courses-view">
             <!-- Settings Modal -->
@@ -131,7 +130,8 @@
 
             <!-- Loading State -->
             <div class="loading" id="initial-loading" style="display: none;">
-                <p>Loading your courses...</p>
+                <div class="spinner" style="width:52px; height:52px; border-width:5px; border-top-color: var(--primary-color); border-right-color: var(--accent-color); margin-bottom: 1rem;"></div>
+                <p id="initial-loading-text" style="font-size:1rem; color: var(--text-secondary);">Waking up the AI from its nap...</p>
             </div>
 
             <!-- Courses Grid -->
@@ -142,27 +142,22 @@
 
         <!-- Assistant View -->
         <div class="container assistant-container" id="assistant-view" style="display: none;">
-            <div class="discussion-pills" id="assistant-topics">
-                <!-- Example topics mentioned in prompt images -->
-                <div class="discussion-pill">Deep Learning Basics</div>
-                <div class="discussion-pill">Flask Best Practices</div>
-                <div class="discussion-pill">Kubernetes Orchestration</div>
-                <div class="discussion-pill">Database Indexing</div>
+            <!-- Chat History (messages appear here) -->
+            <div id="assistant-response-container" class="assistant-response-area" style="display: none; width: 100%;">
+                <div id="assistant-chat-history" style="display: flex; flex-direction: column; gap: 1.5rem; padding-bottom: 1rem;"></div>
             </div>
 
-            <h2 class="assistant-prompt">Select a topic to continue or start a new discussion</h2>
+            <!-- Empty state: topics + prompt -->
+            <div id="assistant-topics" class="discussion-pills">
+                <!-- Populated by JS from loaded courses -->
+            </div>
+            <h2 class="assistant-prompt">Ask me anything about your courses ✨</h2>
 
+            <!-- Fixed chat input at bottom -->
             <div class="chat-input-wrapper">
                 <div class="chat-input-container">
-                    <textarea id="chat-input" placeholder="Ask Anything" rows="1"></textarea>
+                    <textarea id="chat-input" placeholder="Ask Anything..." rows="1"></textarea>
                     <button class="btn-send-chat" onclick="sendAssistantQuery()">➔</button>
-                </div>
-            </div>
-
-            <!-- Chat Response Area -->
-            <div id="assistant-response-container" class="assistant-response-area" style="display: none;">
-                <div class="response-card">
-                    <div id="assistant-response-text"></div>
                 </div>
             </div>
         </div>
@@ -174,9 +169,9 @@
 
                 <!-- View 1: Loading/Processing -->
                 <div id="view-loading" class="quiz-view">
-                    <h2>Analyzing Materials...</h2>
+                    <h2>🤖 Analyzing Materials...</h2>
                     <div class="spinner"></div>
-                    <p id="loading-text">Fetching course documents</p>
+                    <p id="loading-text">Waking up the AI from its nap...</p>
                 </div>
 
                 <!-- View 1.5: Action Menu -->
@@ -189,7 +184,7 @@
                     </div>
 
                     <div class="action-grid">
-                        <div class="action-card" onclick="startTopicsGeneration()">
+                        <div class="action-card" onclick="showFileSelectionFor('topics')">
                             <div class="action-img-container">
                                 <img data-src="SelectionPanelKeyPoints.png" alt="Key Topics">
                             </div>
@@ -197,7 +192,7 @@
                             <p>High-priority concepts frequently asked in exams are curated here.</p>
                             <span class="action-link">View core concepts</span>
                         </div>
-                        <div class="action-card" onclick="showQuizConfig()">
+                        <div class="action-card" onclick="showFileSelectionFor('quiz')">
                             <div class="action-img-container">
                                 <img data-src="SelectionPanelQuiz.png" alt="Quiz">
                             </div>
@@ -205,7 +200,7 @@
                             <p>Quick assessments designed to reinforce important concepts.</p>
                             <span class="action-link">Attempt Quick Quiz</span>
                         </div>
-                        <div class="action-card" onclick="startSummaryGeneration()">
+                        <div class="action-card" onclick="showFileSelectionFor('summary')">
                             <div class="action-img-container">
                                 <img data-src="SelectionPanelSummary.png" alt="Summary">
                             </div>
@@ -393,8 +388,70 @@
                         <span class="result-item correct">✅ Correct: <span id="correct-count">0</span></span>
                         <span class="result-item wrong">❌ Wrong: <span id="wrong-count">0</span></span>
                     </div>
-                    <p id="feedback-text">Great job! You mastered this topic.</p>
-                    <button class="btn-primary" onclick="closeQuiz()">Close</button>
+                    <p id="feedback-text"></p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-primary" onclick="closeQuiz()">Close</button>
+                    </div>
+                </div>
+
+                <!-- View 5: File Download Selection -->
+                <div id="view-file-download" class="quiz-view" style="display:none;">
+                    <div class="summary-header-banner">
+                        <img data-src="SummaryBanner.png" alt="Banner" class="banner-img">
+                        <div class="banner-overlay">
+                            <div class="banner-content">
+                                <div class="banner-text">
+                                    <h2 id="download-course-name">Course Name</h2>
+                                    <p id="download-course-batch" class="banner-subtitle">Batch</p>
+                                    <h3 class="banner-label">Select Files to Download</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-container-padding">
+                        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Select the specific curriculum materials, presentations, or documents you want to archive.</p>
+                        <div id="file-download-grid" class="file-download-grid">
+                            <!-- Injected checkboxes via JS -->
+                        </div>
+                    </div>
+
+                    <div class="topics-footer" style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button class="btn-secondary" onclick="switchView('action-menu')">Cancel</button>
+                        <button id="start-download-btn" class="btn-primary" onclick="processSelectedDownloads()">Download Selected</button>
+                    </div>
+                </div>
+
+                <!-- View 6: Operation File Selection -->
+                <div id="view-operation-file-select" class="quiz-view" style="display:none;">
+                    <div class="summary-header-banner">
+                        <img data-src="SummaryBanner.png" alt="Banner" class="banner-img">
+                        <div class="banner-overlay">
+                            <div class="banner-content">
+                                <div class="banner-text">
+                                    <h2 id="op-course-name">Course Name</h2>
+                                    <p id="op-course-batch" class="banner-subtitle">Batch</p>
+                                    <h3 class="banner-label">Select Files to Include</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-container-padding">
+                        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Select the specific materials you want the AI to analyze for this operation.</p>
+                        <div style="margin-bottom: 1rem;">
+                            <input type="checkbox" id="op-select-all" checked onchange="toggleAllOperationFiles(this)">
+                            <label for="op-select-all" style="font-weight: 600; cursor: pointer;">Select All Files</label>
+                        </div>
+                        <div id="operation-file-grid" class="file-download-grid">
+                            <!-- Injected checkboxes via JS -->
+                        </div>
+                    </div>
+
+                    <div class="topics-footer" style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button class="btn-secondary" onclick="switchView('action-menu')">Cancel</button>
+                        <button id="start-operation-btn" class="btn-primary" onclick="executePendingOperation()">Continue</button>
+                    </div>
                 </div>
             </div>
         </div>

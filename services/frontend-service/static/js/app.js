@@ -46,6 +46,9 @@ let userScore = 0;
 let correctCount = 0;
 let wrongCount = 0;
 let currentTextContent = ""; // Store text to avoid re-parsing for redundant calls
+let currentBaseText = ""; // Store base text before file text
+let pendingOperation = null;
+let currentTextContentForOperation = "";
 let currentSubjectName = "";
 let quizTimer = null;
 let secondsElapsed = 0;
@@ -53,6 +56,8 @@ let isTimerEnabled = false;
 let allLoadedCourses = []; // Store courses for assistant use
 let courseContentCache = {}; // Cache for extracted course text
 let currentFileList = []; // Current course files for download
+let currentAssistantChatContext = []; // Running conversation for assistant
+let wrongQuestionsContext = []; // Topics user got wrong for adaptive quiz
 
 // --- Optimization: Settings & API Key ---
 function getSettings() {
@@ -250,6 +255,7 @@ function updateAuthUI(isSignedIn) {
         const grid = document.getElementById('courses-grid');
 
         loader.style.display = 'flex'; // show loader while fetching
+        animateLoadingText('initial-loading-text');
 
         // Try to get user info if possible (optional enhancement)
         // const output = document.getElementById('user-profile-pic');
@@ -275,6 +281,7 @@ async function listCourses() {
         });
 
         document.getElementById('initial-loading').style.display = 'none';
+        stopLoadingAnimation();
 
         const courses = response.result.courses;
         allLoadedCourses = courses || []; // Save to global state
@@ -304,12 +311,20 @@ async function listCourses() {
             card.onclick = (e) => {
                 loadCourseMaterials(course.id, course.name, course.section || 'General');
             };
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = `opacity 0.4s ease ${index * 80}ms, transform 0.4s ease ${index * 80}ms`;
             grid.appendChild(card);
+            requestAnimationFrame(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            });
         });
 
     } catch (err) {
         console.error(err);
         document.getElementById('initial-loading').style.display = 'none';
+        stopLoadingAnimation();
         grid.innerHTML = `<p style="color:red">Error loading courses: ${err.message}</p>`;
     }
 }
@@ -336,6 +351,7 @@ async function loadCourseMaterials(courseId, courseName, courseBatch) {
         if (courseContentCache[courseId]) {
             console.log(`Loading ${courseName} from session cache`);
             currentTextContent = courseContentCache[courseId].text;
+            currentBaseText = courseContentCache[courseId].baseText || currentTextContent;
             currentFileList = courseContentCache[courseId].files;
             switchView('action-menu');
             return;
@@ -403,27 +419,19 @@ async function loadCourseMaterials(courseId, courseName, courseBatch) {
             // Wait for all
             const fileResults = await Promise.all(filePromises);
 
-            fileResults.forEach(text => {
-                if (text) aggregatedText += text + "\n";
+            fileResults.forEach((text, i) => {
+                fileList[i].extractedText = text || '';
             });
         }
 
-        // Fallback checks
-        if (aggregatedText.length < 50) {
-            console.warn("Low content found, using context-aware simulation.");
-            aggregatedText = `
-                Subject: ${courseName}
-                This is a generated study context because the classroom query returned limited text. 
-                Key concepts in ${courseName} often include fundamental theories, practical applications, architecture, and core methodologies.
-            `;
-        }
-
-        console.log(`Final extracted text length: ${aggregatedText.length}`);
-        currentTextContent = aggregatedText;
+        console.log(`Classroom data logic completed.`);
+        currentBaseText = aggregatedText;
+        currentTextContent = aggregatedText; // Fallback
         currentFileList = fileList; // Save for download feature
 
         // Store both in cache
         courseContentCache[courseId] = {
+            baseText: aggregatedText,
             text: aggregatedText,
             files: fileList
         };
@@ -436,6 +444,68 @@ async function loadCourseMaterials(courseId, courseName, courseBatch) {
         const msg = e.result?.error?.message || e.message || "Unknown Error";
         document.getElementById('loading-text').innerText = `Error: ${msg}`;
     }
+}
+
+// -------------------------
+// Manual File Upload Handler
+// -------------------------
+async function handleManualUpload(event) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    // Show quiz modal with loading state
+    currentSubjectName = files.map(f => f.name).join(', ');
+    document.getElementById('quiz-modal').classList.add('active');
+    switchView('loading');
+
+    // Reset file list and cache
+    currentFileList = [];
+    currentBaseText = '';
+    currentTextContent = '';
+    currentTextContentForOperation = '';
+
+    try {
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file, file.name);
+
+            const resp = await fetch('/api/parse-file', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!resp.ok) {
+                console.warn(`Failed to parse ${file.name}`);
+                continue;
+            }
+
+            const data = await resp.json();
+            const text = data.text || '';
+
+            currentFileList.push({
+                id: file.name,
+                title: file.name,
+                extractedText: text
+            });
+            currentBaseText += text + '\n';
+        }
+
+        currentTextContent = currentBaseText;
+
+        // Set menu headers
+        const menuName = document.getElementById('menu-course-name');
+        const menuBatch = document.getElementById('menu-course-batch');
+        if (menuName) menuName.innerText = 'Uploaded Files';
+        if (menuBatch) menuBatch.innerText = files.length + ' file(s)';
+
+        switchView('action-menu');
+    } catch (e) {
+        alert('Upload failed: ' + e.message);
+        document.getElementById('quiz-modal').classList.remove('active');
+    }
+
+    // Reset the file input so the same file can be uploaded again
+    event.target.value = '';
 }
 
 // Reuse cache to prevent re-downloading same files
@@ -492,8 +562,93 @@ async function downloadAndParseFile(fileId, fileName) {
 // async function processMaterials(materials) { ... }
 
 // New Functions for Action Menu interactions
+function showFileSelectionFor(operation) {
+    pendingOperation = operation;
+    
+    document.getElementById('op-course-name').innerText = currentSubjectName;
+    document.getElementById('op-course-batch').innerText = document.getElementById('menu-course-batch').innerText;
+
+    const opFileGrid = document.getElementById('operation-file-grid');
+    if (!opFileGrid) return;
+    opFileGrid.innerHTML = '';
+    
+    if (currentFileList.length === 0) {
+        // No files, execute directly with base text
+        executePendingOperation();
+        return;
+    }
+
+    currentFileList.forEach((file, idx) => {
+        const isPdf = file.title.toLowerCase().endsWith('.pdf');
+        const icon = isPdf ? '📄' : '📊';
+        
+        const row = document.createElement('div');
+        row.className = 'file-select-row';
+        row.innerHTML = `
+            <div class="file-info-col">
+                <span class="file-icon">${icon}</span>
+                <span class="file-title-text">${file.title}</span>
+            </div>
+            <div class="file-check-col">
+                <input type="checkbox" class="op-file-checkbox file-checkbox" id="op-file-${idx}" value="${idx}" data-title="${file.title}" checked>
+                <label for="op-file-${idx}"></label>
+            </div>
+        `;
+        row.onclick = (e) => {
+            if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                const cb = row.querySelector('input[type="checkbox"]');
+                cb.checked = !cb.checked;
+            }
+        };
+        opFileGrid.appendChild(row);
+    });
+
+    // Reset select all checkbox
+    const selectAllCb = document.getElementById('op-select-all');
+    if (selectAllCb) selectAllCb.checked = true;
+
+    switchView('operation-file-select');
+}
+
+function toggleAllOperationFiles(checkbox) {
+    const isChecked = checkbox.checked;
+    document.querySelectorAll('.op-file-checkbox').forEach(cb => {
+        cb.checked = isChecked;
+    });
+}
+
+function executePendingOperation() {
+    let selectedText = currentBaseText || "";
+    
+    // Add selected files text
+    const checkboxes = document.querySelectorAll('.op-file-checkbox:checked');
+    checkboxes.forEach(cb => {
+        const idx = cb.value;
+        const file = currentFileList[idx];
+        if (file && file.extractedText) selectedText += "\n" + file.extractedText;
+    });
+
+    if (selectedText.length < 50) {
+        selectedText = `
+            Subject: ${currentSubjectName}
+            This is a generated study context because the classroom query returned limited text. 
+            Key concepts in ${currentSubjectName} often include fundamental theories, practical applications, architecture, and core methodologies.
+        `;
+    }
+
+    currentTextContentForOperation = selectedText;
+
+    if (pendingOperation === 'topics') {
+        generateTopics(selectedText);
+    } else if (pendingOperation === 'quiz') {
+        showQuizConfig();
+    } else if (pendingOperation === 'summary') {
+        startSummaryGeneration(selectedText);
+    }
+}
+
 async function startTopicsGeneration() {
-    await generateTopics(currentTextContent);
+    await generateTopics(currentTextContentForOperation || currentTextContent);
 }
 
 function showQuizConfig() {
@@ -564,10 +719,11 @@ async function generateTopics(text) {
         const grid = document.getElementById('topics-pills-grid');
         grid.innerHTML = '';
 
-        data.topics.forEach(t => {
+        data.topics.forEach((t, idx) => {
             const btn = document.createElement('div');
             btn.className = 'topic-pill-btn';
             btn.innerText = t.topic;
+            btn.style.animationDelay = `${idx * 60}ms`;
             btn.onclick = () => showTopicExplanation(t.topic);
             grid.appendChild(btn);
         });
@@ -601,7 +757,7 @@ async function showTopicExplanation(topicName) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                text: currentTextContent,
+                text: currentTextContentForOperation || currentTextContent,
                 topic: topicName,
                 provider: settings.provider,
                 model: settings.model
@@ -635,12 +791,19 @@ async function startQuizFlow(numQuestions = 5, difficulty = "Medium") {
     document.getElementById('loading-text').innerText = `Generating ${numQuestions} ${difficulty} Questions...`;
 
     try {
+        let adapterTextContext = currentTextContentForOperation || currentTextContent;
+        if (wrongQuestionsContext.length > 0) {
+            adapterTextContext += "\n\n--- PREVIOUS USER STRUGGLES ---\n" +
+                "The user previously got these topics wrong. Please focus heavily on these areas to reinforce learning:\n" +
+                wrongQuestionsContext.join("\n");
+        }
+
         const settings = getSettings();
         const response = await fetch('/api/generate-quiz', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                text: currentTextContent,
+                text: adapterTextContext,
                 provider: settings.provider,
                 model: settings.model,
                 numQuestions: parseInt(numQuestions),
@@ -661,6 +824,7 @@ async function startQuizFlow(numQuestions = 5, difficulty = "Medium") {
         correctCount = 0;
         wrongCount = 0;
         secondsElapsed = 0;
+        wrongQuestionsContext = []; // Reset struggles context for a fresh start
 
         if (!currentQuiz || currentQuiz.length === 0) {
             throw new Error("AI returned no questions. Try again.");
@@ -706,7 +870,7 @@ async function startSummaryGeneration() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                text: currentTextContent,
+                text: typeof textToUse === 'string' ? textToUse : currentTextContentForOperation || currentTextContent,
                 provider: settings.provider,
                 model: settings.model
             })
@@ -803,44 +967,53 @@ async function downloadAllMaterials() {
 function parseMarkdown(text) {
     if (!text) return "";
 
-    let html = text;
+    let lines = text.split('\n');
+    let html = '';
+    let inList = false;
 
-    // 1. Headers (### H3, ## H2, # H1)
-    html = html.replace(/^### (.*$)/gm, '<h4>$1</h4>');
-    html = html.replace(/^## (.*$)/gm, '<h3>$1</h3>');
-    html = html.replace(/^# (.*$)/gm, '<h3>$1</h3>');
+    lines.forEach(line => {
+        line = line.trim();
+        if (!line) {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            return;
+        }
 
-    // 2. Bold (**text**)
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // 3. Italic (*text*)
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // 4. Unordered Lists (- item or * item)
-    // Wrap lists is tricky with simple regex, but we can style lines starting with -
-    html = html.replace(/^- (.*$)/gm, '<li>$1</li>');
-    html = html.replace(/^\* (.*$)/gm, '<li>$1</li>');
-
-    // 5. Wrap list items in ul if they are adjacent (advanced)
-    // For simplicity, just letting <li> exist gives decent browser rendering if display:block
-    // but better to wrap. Let's try a simple block replace for lists.
-    // Actually, simply replacing newlines with <br> breaks lists. 
-    // Let's wrap paragraphs.
-
-    // Split into blocks by double newline
-    const blocks = html.split(/\n\n+/);
-
-    const processedBlocks = blocks.map(block => {
-        if (block.trim().startsWith('<li>')) {
-            return `<ul>${block}</ul>`;
-        } else if (block.match(/^<h[34]>/)) {
-            return block;
-        } else {
-            return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+        // Headers
+        if (line.startsWith('### ')) {
+            html += `<h4>${line.substring(4)}</h4>`;
+        } else if (line.startsWith('## ')) {
+            html += `<h3>${line.substring(3)}</h3>`;
+        } else if (line.startsWith('# ')) {
+            html += `<h3>${line.substring(2)}</h3>`;
+        }
+        // Lists
+        else if (line.startsWith('- ') || line.startsWith('* ')) {
+            if (!inList) {
+                html += '<ul>';
+                inList = true;
+            }
+            html += `<li>${line.substring(2)}</li>`;
+        }
+        // Normal paragraphs
+        else {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            // Add bold/italic
+            let formatted = line
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html += `<p>${formatted}</p>`;
         }
     });
 
-    return processedBlocks.join('');
+    if (inList) html += '</ul>';
+
+    return html;
 }
 
 function showQuestion() {
@@ -922,6 +1095,9 @@ function handleAnswer(btn, selectedOpt, allOptions) {
             statusLabel.innerText = 'Incorrect';
             statusLabel.style.color = 'var(--error)';
         }
+        // Track wrong topic for adaptive quiz
+        const q = currentQuiz[currentQuestionIndex];
+        if (q && q.question) wrongQuestionsContext.push(q.question);
         // Find correct button and highlight it
         allBtns.forEach(b => {
             const opt = allOptions.find(o => o.text === b.innerText);
@@ -978,18 +1154,30 @@ let isAssistantView = false;
 function toggleAssistantView() {
     const coursesView = document.getElementById('courses-view');
     const assistantView = document.getElementById('assistant-view');
-    const assistantBtn = document.querySelector('.btn-assistant');
-    const navCenter = document.querySelector('.nav-center');
+    const assistantBtn = document.getElementById('assistant-toggle-btn');
 
     if (!isAssistantView) {
         // Entering Assistant View
         coursesView.style.display = 'none';
         assistantView.style.display = 'flex';
-        if (navCenter) navCenter.style.visibility = 'hidden';
 
-        assistantBtn.innerText = 'Back to Courses';
-        assistantBtn.style.background = 'white';
-        assistantBtn.style.color = '#0f172a';
+        if (assistantBtn) {
+            assistantBtn.innerText = '← Courses';
+        }
+
+        // Show prompt/topics, hide history
+        const promptTitle = document.querySelector('.assistant-prompt');
+        const topicsEl = document.getElementById('assistant-topics');
+        const responseContainer = document.getElementById('assistant-response-container');
+
+        if (promptTitle) promptTitle.style.display = 'block';
+        if (topicsEl) topicsEl.style.display = 'flex';
+        if (responseContainer) responseContainer.style.display = 'none';
+
+        // Reset conversation context
+        currentAssistantChatContext = [];
+        const chatHistory = document.getElementById('assistant-chat-history');
+        if (chatHistory) chatHistory.innerHTML = '';
 
         isAssistantView = true;
         populateAssistantTopics();
@@ -997,11 +1185,10 @@ function toggleAssistantView() {
         // Returning to Courses
         coursesView.style.display = 'block';
         assistantView.style.display = 'none';
-        if (navCenter) navCenter.style.visibility = 'visible';
 
-        assistantBtn.innerText = 'Assistant';
-        assistantBtn.style.background = '#1e293b';
-        assistantBtn.style.color = 'white';
+        if (assistantBtn) {
+            assistantBtn.innerText = 'Assistant';
+        }
 
         isAssistantView = false;
     }
@@ -1026,33 +1213,53 @@ async function sendAssistantQuery(manualQuery = null) {
     const input = document.getElementById('chat-input');
     const query = manualQuery || input.value.trim();
     const responseContainer = document.getElementById('assistant-response-container');
-    const responseTextEl = document.getElementById('assistant-response-text');
+    const chatHistory = document.getElementById('assistant-chat-history');
     const promptTitle = document.querySelector('.assistant-prompt');
 
     if (!query) return;
 
-    // UI Feedback
-    promptTitle.innerText = "Researching: " + query;
+    // UI Updates
+    if (promptTitle) promptTitle.style.display = 'none';
+    const topicsEl = document.getElementById('assistant-topics');
+    if (topicsEl) topicsEl.style.display = 'none';
+    
     responseContainer.style.display = 'block';
-    responseTextEl.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; gap:1rem; padding: 2rem;">' +
-        '<div class="spinner"></div>' +
-        '<p style="color: var(--text-secondary);">Analyzing and generating response...</p></div>';
 
+    // Append User Message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-message user-message';
+    userMsg.innerHTML = `<div class="message-content">${query}</div>`;
+    chatHistory.appendChild(userMsg);
+
+    // Clear input early
     if (!manualQuery) input.value = '';
 
-    // Scroll to section
-    responseContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Append Temp AI Message
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'chat-message ai-message response-card';
+    aiMsg.style.padding = '1.5rem';
+    aiMsg.innerHTML = '<div style="display:flex; gap:1rem; align-items:center;">' +
+        '<div class="spinner"></div>' +
+        '<p style="margin:0; font-size: 0.9em; color: var(--text-secondary);">Thinking...</p></div>';
+    chatHistory.appendChild(aiMsg);
+    
+    // Scroll to newly added msg
+    aiMsg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    
+    // Context Builder
+    currentAssistantChatContext.push(`User: ${query}`);
+    let baseRef = currentTextContentForOperation || currentTextContent || "";
+    // If no text, provide empty. The backend logic will handle fallback if needed, but here we provide context from what was scanned.
+    
+    const compiledContext = currentAssistantChatContext.join("\n") + "\n\n--- Base Course Reference Material ---\n" + baseRef.substring(0, 5000);
 
     const settings = getSettings();
-
     try {
         const response = await fetch('/api/explain-topic', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                text: "The user is asking an academic question about: " + query + ". Provide a detailed, pedagogical, and clear explanation.",
+                text: compiledContext,
                 topic: query,
                 provider: settings.provider,
                 model: settings.model
@@ -1061,24 +1268,34 @@ async function sendAssistantQuery(manualQuery = null) {
 
         const data = await response.json();
         if (data.success) {
-            // Very basic Markdown-like formatting for AI response
-            let html = data.explanation
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            // Use full markdown parser for clean formatting
+            const html = parseMarkdown(data.explanation);
 
-            responseTextEl.innerHTML = `<p>${html}</p>`;
+            // Find model nice name
+            let modelNameForReply = "AI Assistant";
+            if (settings && settings.model) {
+                Object.keys(AI_CONFIG).forEach(providerKey => {
+                    const match = AI_CONFIG[providerKey].models.find(m => m.id === settings.model);
+                    if (match) modelNameForReply = match.name;
+                });
+            }
+            const modelTag = `<div class="ai-model-tag">Responded using: ${modelNameForReply}</div>`;
 
-            // Scroll to the full response
-            setTimeout(() => {
-                responseContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            // Wrap in a single bubble div — NOT a <p> — to avoid multi-column
+            aiMsg.className = 'chat-message ai-message';
+            aiMsg.style.padding = '';
+            aiMsg.innerHTML = `<div class="ai-bubble">${html}${modelTag}</div>`;
+
+            // Scroll new message into view
+            aiMsg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            // Save AI Context
+            currentAssistantChatContext.push(`Assistant: ${data.explanation}`);
         } else {
-            responseTextEl.innerHTML = `<div style="color: var(--error);">AI Error: ${data.error}</div>`;
+            aiMsg.innerHTML = `<div style="color: var(--error);">AI Error: ${data.error}</div>`;
         }
     } catch (err) {
-        responseTextEl.innerHTML = `<div style="color: var(--error);">Connection failed: AI service is currently unavailable.</div>`;
+        aiMsg.innerHTML = `<div style="color: var(--error);">Connection failed.</div>`;
     }
 }
 
@@ -1108,11 +1325,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+const FUNNY_MESSAGES = [
+    "Waking up the AI from its nap...",
+    "Brewing digital coffee for the processor...",
+    "Analyzing your materials (and judging your font choices)...",
+    "Counting to infinity... twice...",
+    "Herding the data packets...",
+    "Consulting the grand oracle of Google...",
+    "Searching for the answer to life, the universe, and everything...",
+    "Translating professor-speak into human-speak...",
+    "Feeding hamsters to power the servers...",
+    "Spinning up the anti-gravity engines..."
+];
+
+let loadingInterval = null;
+
+function animateLoadingText(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    
+    if (loadingInterval) clearInterval(loadingInterval);
+    
+    // Set first message immediately
+    el.innerText = FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)];
+    
+    loadingInterval = setInterval(() => {
+        const msg = FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)];
+        el.innerText = msg;
+        el.style.animation = 'none';
+        void el.offsetWidth; // trigger reflow
+        el.style.animation = 'pulseText 1s ease';
+    }, 2500);
+}
+
+function stopLoadingAnimation() {
+    if (loadingInterval) clearInterval(loadingInterval);
+}
+
 function switchView(viewName) {
+    if (viewName !== 'loading') stopLoadingAnimation();
+
     // Hide all
     document.querySelectorAll('.quiz-view').forEach(el => el.style.display = 'none');
     // Show target
     document.getElementById(`view-${viewName}`).style.display = 'block';
+
+    if (viewName === 'loading') animateLoadingText('loading-text');
 }
 
 function closeQuiz() {

@@ -1,6 +1,6 @@
-# AceNow Architecture & Tech Stack
+# AceNow v2.0 Architecture & Tech Stack
 
-This document details the internal design and technical decisions of the AceNow microservices ecosystem.
+This document details the internal design and technical decisions of the AceNow microservices ecosystem, updated for the Version 2.0 release.
 
 ## 📡 Service Flow
 
@@ -23,40 +23,44 @@ graph TD
 | :--- | :--- |
 | **Framework** | Python / Flask |
 | **Authentication** | Google Identity Services (OAuth 2.0) |
-| **AI Processing** | Google GenAI, Groq (Llama 3.3), Ollama |
+| **AI Processing** | Google GenAI (2.0 Flash), Groq (Llama 3.3), Ollama |
 | **File Parsing** | `pdfplumber`, `python-pptx`, `PyPDF2` |
 | **Frontend** | Vanilla JS (ES6+), CSS3 (Glassmorphism), HTML5 |
 | **Parallel Downloads** | `JSZip` (Client-side bundling) |
 | **Containerization** | Docker, Docker Compose |
 
-## 🧠 Specialized Logic
+## 🧠 Version 2.0 Specialized Logic
 
-### 1. AI Fallback Engine
-The AI Service implements a robust retry-strategy:
-- **Priority 1**: Gemini 2.0 Flash (Fast & Accurate).
-- **Priority 2**: Groq (Llama 3.3 70B) - if Gemini hits quota/rate limits.
-- **Priority 3**: Ollama (Llama 3.2) - if running locally.
-- **Parsing**: Advanced JSON-repair logic handles varied AI output formats to ensure UI stability.
+### 1. Adaptive Quiz Engine
+The quiz system now incorporates **Adaptive Learning**:
+- **Error Tracking**: Incorrect answers are tracked during a session.
+- **Context Re-injection**: When a new quiz is generated, previous struggles are appended to the AI prompt to focus on weak areas.
+- **Rationale Analysis**: AI provides detailed pedagogical feedback for every choice, not just the correct one.
 
-### 2. File Processing
-- **Scanning**: Multi-threaded metadata fetching from Google Classroom.
-- **Parsing**: Server-side text extraction to keep the frontend light.
-- **Bundling**: Client-side ZIP generation avoids heavy server-side temporary file storage.
+### 2. Context-Aware Assistant
+The AI Assistant maintains a conversational history and shared context:
+- **Shared Memory**: The assistant knows which course you are currently viewing.
+- **Cross-Service Query**: It can trigger summarization or key topic identification on the fly.
 
-### 3. API Gateway Routing
+### 3. Flexible Material Handling
+- **Manual Upload**: Users can upload `.pdf` and `.pptx` files directly to the File Parser service.
+- **Unified Cache**: Both Classroom and manual files are normalized into a single text stream for AI processing.
+
+### 4. API Gateway Routing
 The Gateway handles CORS and acts as a security buffer:
 - `/auth/*` -> Auth Service
 - `/parse/*` -> File Parser
 - `/ai/*` -> AI Service
+- `/api/config` -> Gateway (Environment injection)
 - `/*` (Static) -> Frontend Service
 
 ## 📦 Deployment Configuration
 
 - **`Dockerfile`**: A multi-stage setup that installs all dependencies and prepares the environment.
-- **`start.sh`**: A supervisor script that boots all microservices concurrently within a single container (optimized for free hosting like HF Spaces).
+- **`start.sh`**: A supervisor script that boots all microservices concurrently within a single container (optimized for Hugging Face Spaces).
 - **`run_dev.py`**: A developer-friendly Python script for parallel local execution with live logs.
 
 ## 🔒 Security
 - **No API Keys in Frontend**: All sensitive keys are stored in the backend `.env`.
 - **Stateless Auth**: Uses Google JWT verification.
-- **Proxy Aware**: Optimized for Windows and Unix environments with `NO_PROXY` configurations.
+- **Automation**: CI/CD pipeline via GitHub Actions handles binary-free cleanup for secure deployment.

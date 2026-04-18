@@ -2,6 +2,8 @@
 
 :root {
     --bg-color: #020617;
+    --bg-gradient-1: #0f172a;
+    --bg-gradient-2: #1e1b4b;
     --primary-color: #0ea5e9;
     --accent-color: #38bdf8;
     --text-primary: #f8fafc;
@@ -16,6 +18,8 @@
 
 [data-theme="light"] {
     --bg-color: #f8fafc;
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #dbeafe;
     --primary-color: #0284c7;
     --accent-color: #0ea5e9;
     --text-primary: #0f172a;
@@ -38,8 +42,9 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
-    background: radial-gradient(circle at top left, #0f172a, #020617),
-        radial-gradient(circle at bottom right, #1e1b4b, #020617);
+    background: radial-gradient(circle at top left, var(--bg-gradient-1), transparent 80%),
+        radial-gradient(circle at bottom right, var(--bg-gradient-2), transparent 80%);
+    background-color: var(--bg-color);
 }
 
 /* Background blob effects */
@@ -86,7 +91,7 @@ body {
     position: relative;
     overflow-x: hidden;
     scroll-behavior: smooth;
-    background: #020617;
+    background: transparent;
     /* Solid base */
 }
 
@@ -123,7 +128,7 @@ body {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 2rem;
-    color: white;
+    color: var(--text-primary);
 }
 
 .about-description {
@@ -147,9 +152,9 @@ body {
 }
 
 .feature-card {
-    background: rgba(30, 41, 59, 0.3);
+    background: var(--card-bg);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
     border-radius: 32px;
     padding: 3rem;
     text-align: left;
@@ -160,7 +165,7 @@ body {
 }
 
 .feature-card:hover {
-    background: rgba(30, 41, 59, 0.5);
+    background: var(--card-hover);
     border-color: var(--primary-color);
     transform: translateY(-10px);
 }
@@ -183,7 +188,7 @@ body {
 .feature-card h3 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -308,17 +313,59 @@ body {
 }
 
 /* --- Dashboard Navigation --- */
-nav {
+.floating-nav {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 1.5rem 2rem;
+    gap: 1rem;
+    padding: 0.6rem 2rem;
+    margin: 2rem auto;
+    width: max-content;
+    border-radius: 100px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
     position: sticky;
-    top: 0;
+    top: 2rem;
     z-index: 100;
-    backdrop-filter: blur(15px);
-    border-bottom: 1px solid var(--card-border);
-    background: rgba(2, 6, 23, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.nav-pill-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e7ff;
+    padding: 0.6rem 1.5rem;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+}
+
+.nav-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.nav-pill-icon {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.nav-pill-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
 }
 
 .logo-highlight {
@@ -472,7 +519,7 @@ nav {
 .discussion-pill {
     background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94a3b8;
+    color: var(--text-primary);
     padding: 0.8rem 1.8rem;
     border-radius: 99px;
     font-size: 0.95rem;
@@ -483,7 +530,7 @@ nav {
 .discussion-pill:hover {
     background: rgba(30, 41, 59, 0.8);
     border-color: var(--primary-color);
-    color: white;
+    color: var(--primary-color);
     transform: translateY(-3px);
 }
 
@@ -587,7 +634,7 @@ nav {
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 24px;
     padding: 2.5rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 1.1rem;
     line-height: 1.8;
 }
@@ -658,15 +705,15 @@ nav {
     border-radius: 32px;
     padding: 0;
     height: auto;
-    background: #0f172a;
+    background: var(--card-bg);
     display: flex;
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 .card:hover {
@@ -705,7 +752,7 @@ nav {
 .card-title {
     font-size: 1.35rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.2;
 }
@@ -758,13 +805,13 @@ nav {
 }
 
 .quiz-container {
-    background: #0f172a;
+    background: var(--bg-color);
     width: 95%;
     max-width: 1000px;
     border-radius: 48px;
     padding: 3.5rem;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
@@ -805,7 +852,7 @@ nav {
 
 #view-loading h2 {
     font-size: 2rem;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 2rem;
     font-weight: 700;
     text-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
@@ -814,7 +861,7 @@ nav {
 #loading-text {
     margin-top: 2rem;
     font-size: 1.1rem;
-    color: white;
+    color: var(--text-primary);
     font-weight: 500;
     letter-spacing: 0.02em;
     opacity: 0.9;
@@ -841,7 +888,7 @@ nav {
 #quiz-qno-display {
     font-size: 1.1rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     opacity: 0.9;
 }
 
@@ -878,7 +925,7 @@ nav {
     padding: 0.6rem 1.25rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-primary);
     border-radius: 100px;
     font-size: 0.85rem;
     font-weight: 600;
@@ -908,7 +955,7 @@ nav {
 }
 
 .question-text {
-    color: white;
+    color: var(--text-primary);
     font-size: 1.35rem;
     line-height: 1.5;
     margin-bottom: 2.5rem;
@@ -926,7 +973,7 @@ nav {
     padding: 1.25rem 2rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-primary);
     border-radius: 100px;
     font-size: 1rem;
     font-weight: 500;
@@ -953,7 +1000,7 @@ nav {
 
 .option-btn.wrong {
     background: var(--error) !important;
-    color: white !important;
+    color: var(--text-primary) !important;
     border-color: var(--error) !important;
 }
 
@@ -984,7 +1031,7 @@ nav {
 .menu-titles h2 {
     font-size: 2rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -1037,7 +1084,7 @@ nav {
 .action-card h3 {
     font-size: 1.25rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin: 0 0 0.75rem 0;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1111,7 +1158,7 @@ nav {
 
 .banner-text h2 {
     font-size: 1.75rem;
-    color: white;
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -1124,14 +1171,14 @@ nav {
 .banner-label {
     font-size: 1.25rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     margin-top: 1.5rem;
 }
 
 .topic-pill-large {
     background: rgba(14, 165, 233, 0.15);
     border: 1px solid var(--primary-color);
-    color: white;
+    color: var(--text-primary);
     padding: 0.75rem 2rem;
     border-radius: 100px;
     font-size: 1.1rem;
@@ -1154,7 +1201,7 @@ nav {
 .topic-pill-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-primary);
     padding: 1.25rem 2rem;
     border-radius: 100px;
     font-size: 1rem;
@@ -1175,7 +1222,7 @@ nav {
     background: rgba(255, 255, 255, 0.02);
     border-radius: 24px;
     padding: 2.5rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 1.1rem;
     line-height: 1.8;
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1459,6 +1506,99 @@ nav {
     }
 }
 
+/* Typing Indicator */
+.typing-indicator {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.typing-indicator span {
+    width: 6px;
+    height: 6px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* File Download UI */
+.file-download-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.file-select-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-select-row:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .file-select-row {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .file-select-row:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: var(--primary-color);
+}
+
+.file-info-col {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.file-icon {
+    font-size: 1.5rem;
+}
+
+.file-title-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.file-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
 /* Responsive Improvements */
 @media(max-width: 768px) {
     nav {
@@ -1519,4 +1659,444 @@ nav {
         padding: 0.5rem 1.25rem;
         font-size: 0.85rem;
     }
+}
+
+/* Light Mode Overrides for UI components */
+[data-theme="light"] .quiz-overlay {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .pill-option,
+[data-theme="light"] .option-btn,
+[data-theme="light"] .topic-pill-btn,
+[data-theme="light"] .btn-hint {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .pill-option:hover,
+[data-theme="light"] .option-btn:hover:not(:disabled),
+[data-theme="light"] .topic-pill-btn:hover,
+[data-theme="light"] .btn-hint:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .action-card {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .action-card:hover {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .banner-overlay {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.4) 100%);
+}
+
+[data-theme="light"] .explanation-content,
+[data-theme="light"] .rationale-container {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .close-btn {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .close-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .action-link {
+    color: var(--primary-color);
+}
+
+/* ==========================================================================
+   Chat Message Styles
+   ========================================================================== */
+.chat-message {
+    animation: slideInUp 0.3s ease forwards;
+    opacity: 0;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: #fff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 18px 18px 4px 18px;
+    max-width: 70%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.ai-message {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.ai-bubble {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px 18px 18px 18px;
+    padding: 1.5rem 2rem;
+    max-width: 90%;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.ai-bubble p {
+    margin-bottom: 1.25rem;
+}
+
+.ai-bubble ul {
+    margin: 1rem 0 1.5rem 1.5rem;
+    list-style-type: disc;
+}
+
+.ai-bubble li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.ai-bubble p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-model-tag {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    text-align: left;
+    font-style: italic;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 0.75rem;
+    display: block;
+}
+
+[data-theme="light"] .ai-bubble {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .ai-model-tag {
+    border-top-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   File Select Row (Operation File Selection)
+   ========================================================================== */
+.file-select-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    margin-bottom: 0.5rem;
+}
+
+.file-select-row:hover {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: var(--primary-color);
+    transform: translateX(3px);
+}
+
+.file-info-col {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.file-icon {
+    font-size: 1.4rem;
+}
+
+.file-title-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.file-check-col {
+    display: flex;
+    align-items: center;
+}
+
+.file-check-col input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Funky Animated Loading Spinner
+   ========================================================================== */
+
+/* Override default view-loading to be more fun */
+#view-loading {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem 1rem;
+}
+
+#view-loading .spinner {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent;
+    border-top-color: var(--primary-color);
+    border-right-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spinFun 0.8s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+@keyframes spinFun {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(180deg) scale(1.1);
+    }
+
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+#view-loading h2 {
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--primary-color));
+    background-size: 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmerText 2s linear infinite;
+}
+
+@keyframes shimmerText {
+    0% {
+        background-position: 0%;
+    }
+
+    100% {
+        background-position: 200%;
+    }
+}
+
+#loading-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    min-height: 1.4em;
+    transition: opacity 0.3s;
+}
+
+/* ==========================================================================
+   Micro-animations for Action Cards, Pills, Topic Pills
+   ========================================================================== */
+.action-card {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.2s;
+}
+
+.action-card:hover {
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.25);
+}
+
+.topic-pill-btn {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, box-shadow 0.2s;
+}
+
+.topic-pill-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+}
+
+.file-select-row,
+.file-download-row {
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.btn-primary,
+.btn-secondary {
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, filter 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.45);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+}
+
+.nav-pill-btn {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, box-shadow 0.2s;
+}
+
+.nav-pill-btn:hover {
+    transform: scale(1.06);
+}
+
+/* Card hover lift with glow */
+.card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 25px 60px rgba(139, 92, 246, 0.25);
+}
+
+/* Quiz Options bounce-in */
+.option-btn {
+    animation: optionIn 0.3s ease forwards;
+    opacity: 0;
+}
+
+.option-btn:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.option-btn:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.option-btn:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.option-btn:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+@keyframes optionIn {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Topic pill staggered entry */
+.topic-pill-btn {
+    animation: pillEntry 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    opacity: 0;
+}
+
+@keyframes pillEntry {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Discussion pills hover lift */
+.discussion-pill {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+
+.discussion-pill:hover {
+    transform: scale(1.05) translateY(-2px);
+}
+
+/* Close button spin on hover */
+.close-btn {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+
+.close-btn:hover {
+    transform: rotate(90deg) scale(1.15);
+}
+
+/* Light theme chat overrides */
+[data-theme="light"] .ai-message p {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .user-message .message-content {
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
+}
+
+/* ==========================================================================
+   Loading Screens — pulse text animation
+   ========================================================================== */
+@keyframes pulseText {
+    0% {
+        opacity: 0.5;
+        transform: translateY(2px);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+
+    100% {
+        opacity: 0.7;
+        transform: translateY(0);
+    }
+}
+
+#initial-loading {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem;
+    gap: 0.75rem;
+}
+
+#initial-loading .spinner {
+    border-top-color: var(--primary-color);
+    border-right-color: var(--accent-color);
+    animation: spinFun 0.8s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
